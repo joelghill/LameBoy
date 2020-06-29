@@ -19,4 +19,4 @@ macro(package_add_test TESTNAME)
     set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
 endmacro()
 
-package_add_test(test_foo test_foo.cpp)
+package_add_test(test_op_codes test_op_codes.cpp ../src/cpu/sm83_state.cpp ../src/cpu/sm83_op_codes.cpp)
