@@ -15,6 +15,17 @@
 
 using namespace std;
 
+// Flag Register constants
+static const uint8_t Z_FLAG = 0b10000000;
+static const uint8_t N_FLAG = 0b01000000;
+static const uint8_t H_FLAG = 0b00100000;
+static const uint8_t C_FLAG = 0b00010000;
+
+static const uint8_t NOT_Z_FLAG = 0b01111111;
+static const uint8_t NOT_N_FLAG = 0b10111111;
+static const uint8_t NOT_H_FLAG = 0b11011111;
+static const uint8_t NOT_C_FLAG = 0b11101111;
+
 class SM83State
 {
 
@@ -52,6 +63,41 @@ public:
      *
      */
     ~SM83State() = default;
+
+    /**
+     * @brief Zero flag. This bit becomes set (1) if the result of an operation has been zero (0).
+     * Used for conditional jumps.
+     *
+     * @return true if the zero flag has been set
+     * @return false if the zero flag is not set
+     */
+    bool zFlag();
+
+    /**
+     * @brief N indicates whether the previous instruction has been an addition or subtraction.
+     *
+     * @return true if the previous instruction was a subtraction
+     * @return false if the previous instruction was an addition
+     */
+    bool nFlag();
+
+    /**
+     * @brief H indicates a carry for lower 4bits of the previous instructions result
+     *
+     * @return true if the previous instruction had a carry in the lower 4 bits
+     * @return false if the previous instruction did not result in a carry in the lower 4 bits
+     */
+    bool hFlag();
+
+    /**
+     * @brief cy Becomes set when the result of an addition became bigger than FFh (8bit) or FFFFh (16bit).
+     *  Or when the result of a subtraction or comparision became less than zero.
+     *  Also the flag becomes set when a rotate/shift operation has shifted-out a "1"-bit.
+     *
+     * @return true if the previous instruction resulted in a carry or overflow
+     * @return false if the previous instruction did not result in a carry or overflow
+     */
+    bool cFlag();
 
     /**
      * @brief Gets the A register Value
@@ -242,6 +288,21 @@ public:
      * @param num_bytes The number of bytes to increment the program counter by
      */
     void IncrementProgramCounter(uint8_t num_bytes);
+
+    /**
+     * @brief Gets the memory saved at the 16bit address
+     *
+     * @param address The 16bit absolute memory address
+     */
+    uint8_t MemoryAt(int16_t address);
+
+    /**
+     * @brief Sets the memory saved at the 16bit address
+     *
+     * @param address The 16bit absolute memory address
+     * @param value The 8bit value to load into the memory
+     */
+    void SetMemoryAt(int16_t address, uint8_t value);
 };
 
 #endif
