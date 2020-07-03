@@ -96,6 +96,31 @@ void SM83State::setBC(uint16_t value) {
     this->c_register_ = (uint8_t)(value & 0x00ff);
 }
 
+uint8_t SM83State::d() {
+    return this->d_register_;
+}
+
+void SM83State::setD(uint8_t value) {
+    this->d_register_ = value;
+}
+
+uint8_t SM83State::e() {
+    return this->e_register_;
+}
+
+void SM83State::setE(uint8_t value) {
+    this->e_register_ = value;
+}
+
+uint16_t SM83State::de() {
+    return ((uint16_t)(this->d_register_ << 8) | this->e_register_);
+}
+
+void SM83State::setDE(uint16_t value) {
+    this->d_register_ = (uint8_t)((value & 0xff00) >> 8);
+    this->e_register_ = (uint8_t)(value & 0x00ff);
+}
+
 uint8_t SM83State::f() {
     return this->f_register_;
 }

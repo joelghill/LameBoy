@@ -185,11 +185,32 @@ uint8_t Execute01(SM83State* state) {
     return 12;
 }
 
+uint8_t Execute11(SM83State* state) {
+    uint8_t d = state->MemoryAt(state->programCounter() + 1);
+    uint8_t e = state->MemoryAt(state->programCounter() + 2);
+
+    state->setD(d);
+    state->setE(e);
+    state->IncrementProgramCounter(3);
+
+    return 12;
+}
+
 uint8_t Execute02(SM83State* state) {
     uint8_t a = state->a();
     uint16_t bc = state->bc();
 
     state->SetMemoryAt(bc, a);
+    state->IncrementProgramCounter(1);
+
+    return 8;
+}
+
+uint8_t Execute12(SM83State* state) {
+    uint8_t a = state->a();
+    uint16_t de = state->de();
+
+    state->SetMemoryAt(de, a);
     state->IncrementProgramCounter(1);
 
     return 8;
@@ -203,14 +224,34 @@ uint8_t Execute03(SM83State* state) {
     return 8;
 }
 
+uint8_t Execute13(SM83State* state) {
+    uint16_t de = state->de();
+    state->setDE(de + 1);
+    state->IncrementProgramCounter(1);
+
+    return 8;
+}
+
 uint8_t Execute04(SM83State* state) {
     AddToRegister(state, &SM83State::b, &SM83State::setB, 1);
     state->IncrementProgramCounter(1);
     return 4;
 }
 
+uint8_t Execute14(SM83State* state) {
+    AddToRegister(state, &SM83State::d, &SM83State::setD, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
 uint8_t Execute05(SM83State* state) {
     SubFromRegister(state, &SM83State::b, &SM83State::setB, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute15(SM83State* state) {
+    SubFromRegister(state, &SM83State::d, &SM83State::setD, 1);
     state->IncrementProgramCounter(1);
     return 4;
 }
@@ -223,8 +264,22 @@ uint8_t Execute06(SM83State* state) {
     return 8;
 }
 
+uint8_t Execute16(SM83State* state) {
+    uint8_t data = state->MemoryAt(state->programCounter() + 1);
+    state->setD(data);
+
+    state->IncrementProgramCounter(2);
+    return 8;
+}
+
 uint8_t Execute07(SM83State* state) {
     RotateLeft(state, &SM83State::a, &SM83State::setA, false);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute17(SM83State* state) {
+    RotateLeft(state, &SM83State::a, &SM83State::setA, true);
     state->IncrementProgramCounter(1);
     return 4;
 }
@@ -243,9 +298,25 @@ uint8_t Execute08(SM83State* state) {
     return 20;
 }
 
+uint8_t Execute18(SM83State* state) {
+    uint16_t pc = state->programCounter();
+    int8_t r8 = (int8_t)state->MemoryAt(pc + 1);
+
+    state->setProgramCounter((uint16_t)(pc + r8));
+    return 12;
+}
+
 uint8_t Execute09(SM83State* state) {
     uint16_t bc = state->bc();
     AddToRegister(state, &SM83State::hl, &SM83State::setHL, bc);
+
+    state->IncrementProgramCounter(1);
+    return 8;
+}
+
+uint8_t Execute19(SM83State* state) {
+    uint16_t de = state->de();
+    AddToRegister(state, &SM83State::hl, &SM83State::setHL, de);
 
     state->IncrementProgramCounter(1);
     return 8;
@@ -260,6 +331,15 @@ uint8_t Execute0A(SM83State* state) {
     return 8;
 }
 
+uint8_t Execute1A(SM83State* state) {
+    uint16_t de = state->de();
+    uint8_t value = state->MemoryAt(de);
+
+    state->setA(value);
+    state->IncrementProgramCounter(1);
+    return 8;
+}
+
 uint8_t Execute0B(SM83State* state) {
     uint16_t bc = state->bc();
     state->setBC(bc - 1);
@@ -268,8 +348,62 @@ uint8_t Execute0B(SM83State* state) {
     return 8;
 }
 
+uint8_t Execute1B(SM83State* state) {
+    uint16_t de = state->de();
+    state->setDE(de - 1);
+    state->IncrementProgramCounter(1);
+
+    return 8;
+}
+
 uint8_t Execute0C(SM83State* state) {
     AddToRegister(state, &SM83State::c, &SM83State::setC, 1);
     state->IncrementProgramCounter(1);\
+    return 4;
+}
+
+uint8_t Execute1C(SM83State* state) {
+    AddToRegister(state, &SM83State::e, &SM83State::setE, 1);
+    state->IncrementProgramCounter(1);\
+    return 4;
+}
+
+uint8_t Execute0D(SM83State* state) {
+    SubFromRegister(state, &SM83State::c, &SM83State::setC, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute1D(SM83State* state) {
+    SubFromRegister(state, &SM83State::e, &SM83State::setE, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute0E(SM83State* state) {
+    uint8_t data = state->MemoryAt(state->programCounter() + 1);
+    state->setC(data);
+
+    state->IncrementProgramCounter(2);
+    return 8;
+}
+
+uint8_t Execute1E(SM83State* state) {
+    uint8_t data = state->MemoryAt(state->programCounter() + 1);
+    state->setE(data);
+
+    state->IncrementProgramCounter(2);
+    return 8;
+}
+
+uint8_t Execute0F(SM83State* state) {
+    RotateRight(state, &SM83State::a, &SM83State::setA, false);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute1F(SM83State* state) {
+    RotateRight(state, &SM83State::a, &SM83State::setA, true);
+    state->IncrementProgramCounter(1);
     return 4;
 }

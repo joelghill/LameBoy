@@ -50,6 +50,19 @@ TEST_F(OpCodesTest, TestExecute01) {
     ASSERT_EQ(this->state_->bc(), 0x0402);
 }
 
+TEST_F(OpCodesTest, TestExecute11) {
+    this->state_->SetMemoryAt(this->program_counter_ + 1, 0x04);
+    this->state_->SetMemoryAt(this->program_counter_ + 2, 0x02);
+
+    // Ensure that the
+    ASSERT_EQ(Execute11(this->state_), 12);
+    ASSERT_EQ(this->state_->programCounter(), program_counter_ + 3);
+
+    ASSERT_EQ(this->state_->d(), 0x04);
+    ASSERT_EQ(this->state_->e(), 0x02);
+    ASSERT_EQ(this->state_->de(), 0x0402);
+}
+
 TEST_F(OpCodesTest, TestExecute02) {
     uint8_t a = 0x42;
     uint8_t b = 0x02;
@@ -65,6 +78,21 @@ TEST_F(OpCodesTest, TestExecute02) {
     ASSERT_EQ(this->state_->MemoryAt((uint16_t)b << 8 | c), a);
 }
 
+TEST_F(OpCodesTest, TestExecute12) {
+    uint8_t a = 0x42;
+    uint8_t d = 0x02;
+    uint8_t e = 0x00;
+
+    this->state_->setA(a);
+    this->state_->setD(d);
+    this->state_->setE(e);
+
+    // Ensure that the
+    ASSERT_EQ(Execute12(this->state_), 8);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->MemoryAt((uint16_t)d << 8 | e), a);
+}
+
 TEST_F(OpCodesTest, TestExecute03) {
     uint16_t bc = 0x1987;
 
@@ -77,6 +105,20 @@ TEST_F(OpCodesTest, TestExecute03) {
     ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
     // BC = BC++
     ASSERT_EQ(this->state_->bc(), bc + 1);
+}
+
+TEST_F(OpCodesTest, TestExecute13) {
+    uint16_t de = 0x1987;
+
+    this->state_->setD(0x19);
+    this->state_->setE(0x87);
+
+    // Ensure that the function returns 8 cycles
+    ASSERT_EQ(Execute13(this->state_), 8);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // BC = BC++
+    ASSERT_EQ(this->state_->de(), de + 1);
 }
 
 TEST_F(OpCodesTest, TestExecute04) {
@@ -107,6 +149,42 @@ TEST_F(OpCodesTest, TestExecute04_Z1N0H1) {
     ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
     // B = B++
     ASSERT_EQ(this->state_->b(), 0);
+    // Z should equal 1 since the result was 0
+    ASSERT_EQ(this->state_->zFlag(), 1);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 0);
+    // H Should be 1 since this resulted in a carry
+    ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
+TEST_F(OpCodesTest, TestExecute14) {
+    uint8_t d = 0x19;
+    this->state_->setD(d);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute14(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B++
+    ASSERT_EQ(this->state_->d(), d + 1);
+    // Z should equal 0 since the result did not result in 0
+    ASSERT_EQ(this->state_->zFlag(), 0);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 0);
+    // H Should be zero since this did not result in a carry
+    ASSERT_EQ(this->state_->hFlag(), 0);
+}
+
+TEST_F(OpCodesTest, TestExecute14_Z1N0H1) {
+    uint8_t d = 0xFF;
+    this->state_->setD(d);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute14(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B++
+    ASSERT_EQ(this->state_->d(), 0);
     // Z should equal 1 since the result was 0
     ASSERT_EQ(this->state_->zFlag(), 1);
     // N is always set to 0 after this operation
@@ -151,6 +229,42 @@ TEST_F(OpCodesTest, TestExecute05_Z0N1H1) {
     ASSERT_EQ(this->state_->hFlag(), 1);
 }
 
+TEST_F(OpCodesTest, TestExecute15_Z1N1H0) {
+    uint8_t d = 0x01;
+    this->state_->setD(d);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute15(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->d(), d - 1);
+    // Z should equal 1 since the result of the operation was 0
+    ASSERT_EQ(this->state_->zFlag(), 1);
+    // N is always set to 1 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be zero since this did not result in a carry
+    ASSERT_EQ(this->state_->hFlag(), 0);
+}
+
+TEST_F(OpCodesTest, TestExecute15_Z0N1H1) {
+    uint8_t d = 0x00;
+    this->state_->setD(d);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute15(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->d(), 0xFF);
+    // Z should equal 0 since the result was not 0
+    ASSERT_EQ(this->state_->zFlag(), 0);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be 1 since this resulted in a carry
+    ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
 TEST_F(OpCodesTest, TestExecute06) {
     uint8_t data = 0x42;
     uint16_t pc = state_->programCounter();
@@ -160,6 +274,17 @@ TEST_F(OpCodesTest, TestExecute06) {
     ASSERT_EQ(Execute06(this->state_), 8);
     ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 2);
     ASSERT_EQ(this->state_->b(), data);
+}
+
+TEST_F(OpCodesTest, TestExecute16) {
+    uint8_t data = 0x42;
+    uint16_t pc = state_->programCounter();
+    this->state_->SetMemoryAt(pc+1, data);
+
+    // Ensure that the
+    ASSERT_EQ(Execute16(this->state_), 8);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 2);
+    ASSERT_EQ(this->state_->d(), data);
 }
 
 TEST_F(OpCodesTest, TestExecute07_Z0N0H0C1) {
@@ -192,6 +317,38 @@ TEST_F(OpCodesTest, TestExecute07_Z1N0H0C0) {
     ASSERT_EQ(this->state_->cFlag(), false);
 }
 
+TEST_F(OpCodesTest, TestExecute17_Z0N0H0C1) {
+    uint8_t a = 0b10000000;
+    state_->setA(a);
+    state_->setF(C_FLAG);
+
+    ASSERT_EQ(Execute17(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b00000001);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), false);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), true);
+}
+
+TEST_F(OpCodesTest, TestExecute17_Z1N0H0C0) {
+    uint8_t a = 0b00000000;
+    state_->setA(a);
+    state_->setF(0b00000000);
+
+    ASSERT_EQ(Execute17(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b00000000);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), true);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), false);
+}
+
 TEST_F(OpCodesTest, TestExecute08) {
     uint8_t sp_a = 0xA3;
     uint8_t sp_b = 0x0E;
@@ -201,6 +358,14 @@ TEST_F(OpCodesTest, TestExecute08) {
     ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 3);
     ASSERT_EQ(this->state_->MemoryAt(this->program_counter_ + 1), sp_a);
     ASSERT_EQ(this->state_->MemoryAt(this->program_counter_ + 2), sp_b);
+}
+
+TEST_F(OpCodesTest, TestExecute18) {
+    int8_t r8 = -1; // -1
+    state_->SetMemoryAt(this->program_counter_ + 1, r8);
+
+    ASSERT_EQ(Execute18(this->state_), 12);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ - 1);
 }
 
 TEST_F(OpCodesTest, TestExecute09_N0H1C1) {
@@ -220,6 +385,23 @@ TEST_F(OpCodesTest, TestExecute09_N0H1C1) {
     ASSERT_EQ(this->state_->cFlag(), true);
 }
 
+TEST_F(OpCodesTest, TestExecute19_N0H1C1) {
+    uint16_t hl = 0xFFFF;
+    uint16_t de = 0x0001;
+
+    this->state_->setHL(hl);
+    this->state_->setDE(de);
+
+    ASSERT_EQ(Execute19(this->state_), 8);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(state_->hl(), (uint16_t)(hl + de));
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), true);
+    ASSERT_EQ(this->state_->cFlag(), true);
+}
+
 TEST_F(OpCodesTest, TestExecute0A) {
     uint16_t bc = 0xAAAA;
     uint8_t value = 42;
@@ -228,6 +410,17 @@ TEST_F(OpCodesTest, TestExecute0A) {
     this->state_->SetMemoryAt(bc, value);
 
     ASSERT_EQ(Execute0A(this->state_), 8);
+    ASSERT_EQ(this->state_->a(), value);
+}
+
+TEST_F(OpCodesTest, TestExecute1A) {
+    uint16_t de = 0xAAAA;
+    uint8_t value = 42;
+
+    this->state_->setDE(de);
+    this->state_->SetMemoryAt(de, value);
+
+    ASSERT_EQ(Execute1A(this->state_), 8);
     ASSERT_EQ(this->state_->a(), value);
 }
 
@@ -243,6 +436,20 @@ TEST_F(OpCodesTest, TestExecute0B) {
     ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
     // BC = BC++
     ASSERT_EQ(this->state_->bc(), bc - 1);
+}
+
+TEST_F(OpCodesTest, TestExecute1B) {
+    uint16_t de = 0x1987;
+
+    this->state_->setD(0x19);
+    this->state_->setE(0x87);
+
+    // Ensure that the function returns 8 cycles
+    ASSERT_EQ(Execute1B(this->state_), 8);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // BC = BC++
+    ASSERT_EQ(this->state_->de(), de - 1);
 }
 
 TEST_F(OpCodesTest, TestExecute0C) {
@@ -279,6 +486,198 @@ TEST_F(OpCodesTest, TestExecute0C_Z1N0H1) {
     ASSERT_EQ(this->state_->nFlag(), 0);
     // H Should be 1 since this resulted in a carry
     ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
+TEST_F(OpCodesTest, TestExecute1C) {
+    uint8_t e = 0x19;
+    this->state_->setE(e);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute1C(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // C = C++
+    ASSERT_EQ(this->state_->e(), e + 1);
+    // Z should equal 0 since the result did not result in 0
+    ASSERT_EQ(this->state_->zFlag(), 0);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 0);
+    // H Should be zero since this did not result in a carry
+    ASSERT_EQ(this->state_->hFlag(), 0);
+}
+
+TEST_F(OpCodesTest, TestExecute1C_Z1N0H1) {
+    uint8_t e = 0xFF;
+    this->state_->setE(e);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute1C(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // C = C++
+    ASSERT_EQ(this->state_->e(), 0);
+    // Z should equal 1 since the result was 0
+    ASSERT_EQ(this->state_->zFlag(), 1);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 0);
+    // H Should be 1 since this resulted in a carry
+    ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
+TEST_F(OpCodesTest, TestExecute0D_Z1N1H0) {
+    uint8_t c = 0x01;
+    this->state_->setC(c);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute0D(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->c(), c - 1);
+    // Z should equal 1 since the result of the operation was 0
+    ASSERT_EQ(this->state_->zFlag(), 1);
+    // N is always set to 1 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be zero since this did not result in a carry
+    ASSERT_EQ(this->state_->hFlag(), 0);
+}
+
+TEST_F(OpCodesTest, TestExecute0D_Z0N1H1) {
+    uint8_t c = 0x00;
+    this->state_->setC(c);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute0D(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->c(), 0xFF);
+    // Z should equal 0 since the result was not 0
+    ASSERT_EQ(this->state_->zFlag(), 0);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be 1 since this resulted in a carry
+    ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
+TEST_F(OpCodesTest, TestExecute1D_Z1N1H0) {
+    uint8_t e = 0x01;
+    this->state_->setE(e);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute1D(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->e(), e - 1);
+    // Z should equal 1 since the result of the operation was 0
+    ASSERT_EQ(this->state_->zFlag(), 1);
+    // N is always set to 1 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be zero since this did not result in a carry
+    ASSERT_EQ(this->state_->hFlag(), 0);
+}
+
+TEST_F(OpCodesTest, TestExecute1D_Z0N1H1) {
+    uint8_t e = 0x00;
+    this->state_->setE(e);
+
+    // Ensure that the function returns 4 cycles
+    ASSERT_EQ(Execute1D(this->state_), 4);
+    // 8 bit instruction, PC incremented by 1
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    // B = B--
+    ASSERT_EQ(this->state_->e(), 0xFF);
+    // Z should equal 0 since the result was not 0
+    ASSERT_EQ(this->state_->zFlag(), 0);
+    // N is always set to 0 after this operation
+    ASSERT_EQ(this->state_->nFlag(), 1);
+    // H Should be 1 since this resulted in a carry
+    ASSERT_EQ(this->state_->hFlag(), 1);
+}
+
+TEST_F(OpCodesTest, TestExecute0E) {
+    uint8_t data = 0x42;
+    uint16_t pc = state_->programCounter();
+    this->state_->SetMemoryAt(pc+1, data);
+
+    // Ensure that the
+    ASSERT_EQ(Execute0E(this->state_), 8);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 2);
+    ASSERT_EQ(this->state_->c(), data);
+}
+
+TEST_F(OpCodesTest, TestExecute1E) {
+    uint8_t data = 0x42;
+    uint16_t pc = state_->programCounter();
+    this->state_->SetMemoryAt(pc+1, data);
+
+    // Ensure that the
+    ASSERT_EQ(Execute1E(this->state_), 8);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 2);
+    ASSERT_EQ(this->state_->e(), data);
+}
+
+TEST_F(OpCodesTest, TestExecute0F_Z0N0H0C1) {
+    uint8_t a = 0b0000001;
+    state_->setA(a);
+
+    ASSERT_EQ(Execute0F(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b10000000);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), false);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), true);
+}
+
+TEST_F(OpCodesTest, TestExecute0F_Z1N0H0C0) {
+    uint8_t a = 0b00000000;
+    state_->setA(a);
+
+    ASSERT_EQ(Execute0F(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b00000000);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), true);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), false);
+}
+
+TEST_F(OpCodesTest, TestExecute1F_Z0N0H0C1) {
+    uint8_t a = 0b0000001;
+    state_->setA(a);
+    state_->setF(C_FLAG);
+
+    ASSERT_EQ(Execute1F(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b10000000);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), false);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), true);
+}
+
+TEST_F(OpCodesTest, TestExecute1F_Z1N0H0C0) {
+    uint8_t a = 0b00000000;
+    state_->setA(a);
+    state_->setF(0b00000000);
+
+    ASSERT_EQ(Execute1F(this->state_), 4);
+    ASSERT_EQ(this->state_->programCounter(), this->program_counter_ + 1);
+    ASSERT_EQ(this->state_->a(), 0b00000000);
+
+    // Check the state of the CPU flags
+    ASSERT_EQ(this->state_->zFlag(), true);
+    ASSERT_EQ(this->state_->nFlag(), false);
+    ASSERT_EQ(this->state_->hFlag(), false);
+    ASSERT_EQ(this->state_->cFlag(), false);
 }
 
 }  // namespace
