@@ -35,6 +35,14 @@ bool SM83State::cFlag() {
     return (this->f_register_ & C_FLAG) > 0;
 }
 
+uint16_t SM83State::stackPointer() {
+    return this->stack_pointer_;
+}
+
+void SM83State::setStackPointer(uint16_t value) {
+    this->stack_pointer_ = value;
+}
+
 uint16_t SM83State::programCounter() {
     return this->program_counter_;
 }
@@ -103,4 +111,13 @@ uint16_t SM83State::af() {
 void SM83State::setAF(uint16_t value) {
     this->a_register_ = (uint8_t)((value & 0xff00) >> 8);
     this->f_register_ = (uint8_t)(value & 0x00ff);
+}
+
+uint16_t SM83State::hl() {
+    return ((uint16_t)(this->h_register_ << 8) | this->l_register_);
+}
+
+void SM83State::setHL(uint16_t value) {
+    this->h_register_ = (uint8_t)((value & 0xff00) >> 8);
+    this->l_register_ = (uint8_t)(value & 0x00ff);
 }

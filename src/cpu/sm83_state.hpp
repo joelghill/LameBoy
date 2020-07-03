@@ -268,6 +268,20 @@ public:
     void setHL(uint16_t value);
 
     /**
+     * @brief Gets the stack pointer
+     *
+     * @return uint16_t The current stack pointer
+     */
+    uint16_t stackPointer();
+
+    /**
+     * @brief Sets the Stack Pointer to a new 16bit value
+     *
+     * @param value The new stack pointer
+     */
+    void setStackPointer(uint16_t value);
+
+    /**
      * @brief Gets the program counter
      *
      */

@@ -23,6 +23,17 @@ using namespace std;
 void AddToRegister(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), uint8_t value);
 
 /**
+ * @brief Adds a number to a 16bit SM83 register
+ *
+ * @param state The SM83 state object to operate on
+ * @param reg_getter The getter for the register value
+ * @param reg_setter The setter for the register value
+ * @param value The value to add to the register
+ * @post F register is updated with CPU flags. H and C carry flags are updated
+ */
+void AddToRegister(SM83State* state, uint16_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint16_t), uint16_t value);
+
+/**
  * @brief Subtracts a number from a SM83 register
  *
  * @param state The SM83 state object to operate on
@@ -33,6 +44,25 @@ void AddToRegister(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (S
  */
 void SubFromRegister(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), uint8_t value);
 
+/**
+ * @brief Rotates the provided register to the right
+ *
+ * @param state The SM83 State to operate on
+ * @param reg_getter The getter for the register to rotate
+ * @param reg_setter The setter for the register to rotate
+ * @param through_carry A value indicating whether or not the carry flag rotates into the register
+ */
+void RotateRight(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), bool through_carry);
+
+/**
+ * @brief Rotates the provided register to the left
+ *
+ * @param state The SM83 State to operate on
+ * @param reg_getter The getter for the register to rotate
+ * @param reg_setter The setter for the register to rotate
+ * @param through_carry A value indicating whether or not the carry flag rotates into the register
+ */
+void RotateLeft(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), bool through_carry);
 /**
  * @brief NOP
  *
@@ -92,5 +122,49 @@ uint8_t Execute05(SM83State* state);
  * @return uint8_t The number of cpu cycles to perform operation (8)
  */
 uint8_t Execute06(SM83State* state);
+
+/**
+ * @brief RLCA - Rotates the accumulator to the left
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4)
+ * @post Z, H, N flags set to 0. C flag set by function.
+ */
+uint8_t Execute07(SM83State* state);
+
+/**
+ * @brief LD (a16), SP - Put the stack pointer into the next two bytes
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (20)
+ */
+uint8_t Execute08(SM83State* state);
+
+/**
+ * @brief ADD HL, BC - Add register BC to HL
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute09(SM83State* state);
+
+/**
+ * @brief LD A, (BC) - Load the value at address BC into register A
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute0A(SM83State* state);
+
+/**
+ * @brief DEC BC - Decrement Register BC by 1
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute0B(SM83State* state);
+
+/**
+ * @brief INC C - Increment C by one
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4)
+ */
+uint8_t Execute0C(SM83State* state);
 
 #endif
