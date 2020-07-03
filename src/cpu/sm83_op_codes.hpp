@@ -12,6 +12,28 @@
 using namespace std;
 
 /**
+ * @brief Adds a number to a SM83 register
+ *
+ * @param state The SM83 state object to operate on
+ * @param reg_getter The getter for the register value
+ * @param reg_setter The setter for the register value
+ * @param value The value to add to the register
+ * @post F register is updated with CPU flags
+ */
+void AddToRegister(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), uint8_t value);
+
+/**
+ * @brief Subtracts a number from a SM83 register
+ *
+ * @param state The SM83 state object to operate on
+ * @param reg_getter The getter for the register value
+ * @param reg_setter The setter for the register value
+ * @param value The value to subtract from the register
+ * @post F register is updated with CPU flags
+ */
+void SubFromRegister(SM83State* state, uint8_t (SM83State::*reg_getter)(), void (SM83State::*reg_setter)(uint8_t), uint8_t value);
+
+/**
  * @brief NOP
  *
  * Moves the program counter forward 1 byte
@@ -50,8 +72,25 @@ uint8_t Execute03(SM83State* state);
  *
  * @param state The current state to operate on
  * @return uint8_t The number of cpu cycles to perform operation (4)
- * @post Z, H flags set by function. N flag reset. C flag unaffected.
+ * @post Z, H, N flags set by function. C flag unaffected.
  */
 uint8_t Execute04(SM83State* state);
+
+/**
+ * @brief DEC B - Decrement B by one
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4)
+ * @post Z, H, N flags set by function. C flag unaffected.
+ */
+uint8_t Execute05(SM83State* state);
+
+/**
+ * @brief LD B, d8 - Loads the immediate 8 bits after the PC into the B register
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute06(SM83State* state);
 
 #endif
