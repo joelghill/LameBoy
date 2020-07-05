@@ -11,4 +11,6 @@ Implementation of an emulator for the classic GameBoy.
 
 [Op Codes Table](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html) - Handy and easy to read table of op codes
 
+[GameBoy CPU Manual](http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf)
+
 
