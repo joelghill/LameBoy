@@ -90,6 +90,14 @@ uint8_t Execute01(SM83State* state);
 uint8_t Execute11(SM83State* state);
 
 /**
+ * @brief LD HL, d16 - Load the immediate 2 bytes in memory after the program counter into HL
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (12)
+ */
+uint8_t Execute21(SM83State* state);
+
+/**
  * @brief LD (BC), A - Load the 8bit value stored in register A into memory at the address stored in BC
  *
  * @param state The current state to operate on
@@ -106,6 +114,15 @@ uint8_t Execute02(SM83State* state);
 uint8_t Execute12(SM83State* state);
 
 /**
+ * @brief LD (HL+), A - Load the 8bit value stored in register A into memory at the address stored in HL
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ * @post HL = HL + 1
+ */
+uint8_t Execute22(SM83State* state);
+
+/**
  * @brief INC BC - Increment BC by one
  *
  * @param state The current state to operate on
@@ -120,6 +137,14 @@ uint8_t Execute03(SM83State* state);
  * @return uint8_t The number of cpu cycles to perform operation (8)
  */
 uint8_t Execute13(SM83State* state);
+
+/**
+ * @brief INC HL - Increment HL by one
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute23(SM83State* state);
 
 /**
  * @brief INC B - Increment B by one
@@ -140,6 +165,15 @@ uint8_t Execute04(SM83State* state);
 uint8_t Execute14(SM83State* state);
 
 /**
+ * @brief INC H - Increment H by one
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4)
+ * @post Z, H, N flags set by function. C flag unaffected.
+ */
+uint8_t Execute24(SM83State* state);
+
+/**
  * @brief DEC B - Decrement B by one
  *
  * @param state The current state to operate on
@@ -158,6 +192,15 @@ uint8_t Execute05(SM83State* state);
 uint8_t Execute15(SM83State* state);
 
 /**
+ * @brief DEC H - Decrement H by one
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4)
+ * @post Z, H, N flags set by function. C flag unaffected.
+ */
+uint8_t Execute25(SM83State* state);
+
+/**
  * @brief LD B, d8 - Loads the immediate 8 bits after the PC into the B register
  *
  * @param state The current state to operate on
@@ -172,6 +215,14 @@ uint8_t Execute06(SM83State* state);
  * @return uint8_t The number of cpu cycles to perform operation (8)
  */
 uint8_t Execute16(SM83State* state);
+
+/**
+ * @brief LD H, d8 - Loads the immediate 8 bits after the PC into the D register
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (8)
+ */
+uint8_t Execute26(SM83State* state);
 
 /**
  * @brief RLCA - Rotates the accumulator to the left
@@ -306,5 +357,27 @@ uint8_t Execute0F(SM83State* state);
  * @post Z, H, N flags set to 0. C flag set by function.
  */
 uint8_t Execute1F(SM83State* state);
+
+/**
+ * @brief JR NZ, r8 - Conditional relative jump if the zero flag is not set
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation. 12 if jump, 8 otherwise
+ * @post PC = PC + r8
+ */
+uint8_t Execute20(SM83State* state);
+
+/**
+ * @brief DAA - Decimal adjust accumulator.
+ *
+ * The DAA instruction adjusts the results of a binary addition or subtraction (as stored in the accumulator and flags)
+ * to retroactively turn it into a BCD addition or subtraction. It does so by adding or subtracting 6 from the result's upper nybble,
+ * lower nybble, or both.
+ *
+ * @param state The current state to operate on
+ * @return uint8_t The number of cpu cycles to perform operation (4).
+ * @post F flags are set as needed
+ */
+uint8_t Execute27(SM83State* state);
 
 #endif

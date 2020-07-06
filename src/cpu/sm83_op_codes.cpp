@@ -196,6 +196,17 @@ uint8_t Execute11(SM83State* state) {
     return 12;
 }
 
+uint8_t Execute21(SM83State* state) {
+    uint8_t h = state->MemoryAt(state->programCounter() + 1);
+    uint8_t l = state->MemoryAt(state->programCounter() + 2);
+
+    state->setH(h);
+    state->setL(l);
+    state->IncrementProgramCounter(3);
+
+    return 12;
+}
+
 uint8_t Execute02(SM83State* state) {
     uint8_t a = state->a();
     uint16_t bc = state->bc();
@@ -211,6 +222,17 @@ uint8_t Execute12(SM83State* state) {
     uint16_t de = state->de();
 
     state->SetMemoryAt(de, a);
+    state->IncrementProgramCounter(1);
+
+    return 8;
+}
+
+uint8_t Execute22(SM83State* state) {
+    uint8_t a = state->a();
+    uint16_t hl = state->hl();
+
+    state->SetMemoryAt(hl, a);
+    state->setHL(hl + 1);
     state->IncrementProgramCounter(1);
 
     return 8;
@@ -232,6 +254,14 @@ uint8_t Execute13(SM83State* state) {
     return 8;
 }
 
+uint8_t Execute23(SM83State* state) {
+    uint16_t hl = state->hl();
+    state->setHL(hl + 1);
+    state->IncrementProgramCounter(1);
+
+    return 8;
+}
+
 uint8_t Execute04(SM83State* state) {
     AddToRegister(state, &SM83State::b, &SM83State::setB, 1);
     state->IncrementProgramCounter(1);
@@ -240,6 +270,12 @@ uint8_t Execute04(SM83State* state) {
 
 uint8_t Execute14(SM83State* state) {
     AddToRegister(state, &SM83State::d, &SM83State::setD, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
+uint8_t Execute24(SM83State* state) {
+    AddToRegister(state, &SM83State::h, &SM83State::setH, 1);
     state->IncrementProgramCounter(1);
     return 4;
 }
@@ -256,6 +292,12 @@ uint8_t Execute15(SM83State* state) {
     return 4;
 }
 
+uint8_t Execute25(SM83State* state) {
+    SubFromRegister(state, &SM83State::h, &SM83State::setH, 1);
+    state->IncrementProgramCounter(1);
+    return 4;
+}
+
 uint8_t Execute06(SM83State* state) {
     uint8_t data = state->MemoryAt(state->programCounter() + 1);
     state->setB(data);
@@ -267,6 +309,14 @@ uint8_t Execute06(SM83State* state) {
 uint8_t Execute16(SM83State* state) {
     uint8_t data = state->MemoryAt(state->programCounter() + 1);
     state->setD(data);
+
+    state->IncrementProgramCounter(2);
+    return 8;
+}
+
+uint8_t Execute26(SM83State* state) {
+    uint8_t data = state->MemoryAt(state->programCounter() + 1);
+    state->setH(data);
 
     state->IncrementProgramCounter(2);
     return 8;
@@ -406,4 +456,60 @@ uint8_t Execute1F(SM83State* state) {
     RotateRight(state, &SM83State::a, &SM83State::setA, true);
     state->IncrementProgramCounter(1);
     return 4;
+}
+
+uint8_t Execute20(SM83State* state) {
+    bool nc = state->zFlag() == false;
+    uint16_t pc = state->programCounter();
+
+    // If the zero flag is not set, jump to address in the next 8 bits.
+    if (nc == true) {
+        int8_t address = state->MemoryAt(pc + 1);
+        state->setProgramCounter(pc + address);
+        return 12;
+    }
+    else {
+        state->setProgramCounter(pc + 2);
+        return 8;
+    }
+}
+
+uint8_t Execute27(SM83State* state) {
+
+    uint8_t a = state->a();
+    uint f = state->f();
+
+    bool z_flag = state->zFlag();
+    bool c_flag = state->cFlag();
+    bool h_flag = state->hFlag();
+
+    if (state->nFlag() == false) {
+        // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+        if (c_flag || a > 0x99) {
+            state->setA(a += 0x60);
+            f = f | C_FLAG;
+        }
+        if (h_flag || (a & 0x0f) > 0x09) {
+            a += 0x6;
+        }
+    } else {  // after a subtraction, only adjust if (half-)carry occurred
+        if (c_flag) {
+            a -= 0x60;
+        }
+        if (h_flag) {
+            a -= 0x6;
+        }
+    }
+    // these flags are always updated
+    if (a == 0) {
+        f = f | Z_FLAG;
+    } else {
+        f = f & NOT_Z_FLAG;
+    }
+    // h flag is always cleared
+    f = f & NOT_H_FLAG;
+
+    // Write the new registers
+    state->setA(a);
+    state->setF(f);
 }

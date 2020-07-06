@@ -121,6 +121,31 @@ void SM83State::setDE(uint16_t value) {
     this->e_register_ = (uint8_t)(value & 0x00ff);
 }
 
+uint8_t SM83State::h() {
+    return this->h_register_;
+}
+
+void SM83State::setH(uint8_t value) {
+    this->h_register_ = value;
+}
+
+uint8_t SM83State::l() {
+    return this->l_register_;
+}
+
+void SM83State::setL(uint8_t value) {
+    this->l_register_ = value;
+}
+
+uint16_t SM83State::hl() {
+    return ((uint16_t)(this->h_register_ << 8) | this->l_register_);
+}
+
+void SM83State::setHL(uint16_t value) {
+    this->h_register_ = (uint8_t)((value & 0xff00) >> 8);
+    this->l_register_ = (uint8_t)(value & 0x00ff);
+}
+
 uint8_t SM83State::f() {
     return this->f_register_;
 }
@@ -136,13 +161,4 @@ uint16_t SM83State::af() {
 void SM83State::setAF(uint16_t value) {
     this->a_register_ = (uint8_t)((value & 0xff00) >> 8);
     this->f_register_ = (uint8_t)(value & 0x00ff);
-}
-
-uint16_t SM83State::hl() {
-    return ((uint16_t)(this->h_register_ << 8) | this->l_register_);
-}
-
-void SM83State::setHL(uint16_t value) {
-    this->h_register_ = (uint8_t)((value & 0xff00) >> 8);
-    this->l_register_ = (uint8_t)(value & 0x00ff);
 }
